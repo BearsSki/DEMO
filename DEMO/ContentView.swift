@@ -105,7 +105,7 @@ struct BartenderButtonStyle: ButtonStyle {
             .font(.system(size: 14)) // Adjust the size to your liking
             .fontWeight(.bold)
             .frame(maxWidth: .infinity) // Ensure the button stretches to full width
-            .frame(height: 70) // Set a fixed height for the button
+            .frame(height: 80) // Set a fixed height for the button
             .background(configuration.isPressed ? .gray : Color(red: 56 / 255, green: 68 / 255, blue: 92 / 255)) // Set the background color to white
             .foregroundColor(Color.white) // Set the text color to the RGB values provided
             .cornerRadius(10) // Apply rounded corners
@@ -125,7 +125,7 @@ struct RedeemButtonStyle: ButtonStyle {
             .font(.system(size: 14)) // Adjust the size to your liking
             .fontWeight(.bold)
             .frame(maxWidth: .infinity)
-            .frame(height: 70) // Set a fixed height for the button
+            .frame(height: 80) // Set a fixed height for the button
            // .padding(.vertical, 35) // Increase the top and bottom padding by 1.25 times
             .background(configuration.isPressed ? Color.blue.opacity(0.5) : Color.blue) // Use the exact blue color if you have the RGB values
             .foregroundColor(.white)
@@ -136,86 +136,99 @@ struct RedeemButtonStyle: ButtonStyle {
     }
 }
 
-// MyPassesView
 struct MyPassesView: View {
     @State private var showingRedemptionView = false
+    @State private var redemptionInstructionsView = false
     @State private var selectedTab = 0
+ 
 
     var body: some View {
         ZStack {
             Color.appBackground.edgesIgnoringSafeArea(.all)
 
             VStack(spacing: 0) {
+                // Title
                 HStack {
-                        Text("My Passes")
-                            .font(.system(size: 19)) // Adjust the size to your liking
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                            .padding(.leading, 16) // Add padding to the left as needed
-                        Spacer() // Pushes the text to the left
-                    }
+                    Text("My Passes")
+                        .font(.system(size: 19))
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.leading, 16)
+                    Spacer()
+                }
                 .padding(.top, 30)
                 
-                Spacer(minLength: 10) // Here is the small space you add between the title and the card
+                Spacer(minLength: 10) // Space between title and cards
 
+                // Pass Cards
                 TabView(selection: $selectedTab) {
                     ForEach(0..<2, id: \.self) { index in
                         ScrollView(showsIndicators: false) {
                             VStack(spacing: 0) {
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
-                                        .fill(Color(red: 225 / 255, green: 95 / 255, blue: 190 / 255, opacity: 255 / 255))
-                                        .frame(height: 180)
-                                        .shadow(radius: 10)
-                                        
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        HStack {
-                                            Text("Kollege Klub Dinkytown")
-                                                .font(.system(size: 24))
-                                                .fontWeight(.bold)
-                                                .foregroundColor(.white)
-                                            
-                                            //Spacer()
-                                            
-                                            //Text("Qty: 1")
-                                                //.font(.headline)
-                                               // .fontWeight(.bold)
-                                               // .foregroundColor(.white)
-                                               // .padding(.vertical,0)
-                                            
-                                        }
+                                    // Card Background
+                                    let image = index == 0 ? Image("Green") : Image("Pink")
+                                    let logoImage = index == 0 ? Image("LLGreen") : Image("Pink")
 
-                                        Text(index == 0 ? "Drink Pass                            Qty: 1" : "Leap Pass                             Qty: 1")
+                                    RoundedRectangle(cornerRadius: 25, style: .continuous)
+                                        .frame(height: 180)
+                                        .foregroundColor(.clear) // Makes the RoundedRectangle transparent, so the image can show through
+                                        .background(
+                                            image
+                                                .resizable() // Make the image resizable
+                                                .aspectRatio(contentMode: .fill) // Fill the frame of the RoundedRectangle, may crop the image
+                                        )
+                                        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous)) // Clip the image with the same rounded rectangle shape
+                                        .shadow(radius: 10)
+
+                                    // Card Content
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        Text("Kollege Klub Dinkytown")
                                             .font(.system(size: 24))
                                             .fontWeight(.bold)
                                             .foregroundColor(.white)
-                                            .padding(.vertical, 4) // Added some vertical padding
+
+                                        Text(index == 0 ? "Friday Pass (8am-2am) Qty: 1" : "Leap Pass                             Qty: 1")
+                                            .font(.system(size: 23))
+                                            .fontWeight(.bold)
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 4)
 
                                         Spacer()
 
                                         HStack {
                                             VStack(alignment: .leading) {
                                                 Text("Passholder")
-                                                    .foregroundColor(.white)
-                                                    .font(.system(size: 12))
-                                                Text("anonymous")
+                                                    .fontWeight(.medium)
+                                                    .foregroundColor(.white.opacity(0.7))
+                                                    .font(.system(size: 11))
+                                                Text(index == 0 ? "Bodie Brice" : "Bodie Brice") // This should be dynamic based on actual passholder data.
+                                                    .fontWeight(.medium)
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15))
                                             }
                                             Spacer()
                                             VStack(alignment: .trailing) {
-                                                Text("Expires at")
+                                                Text("Expires at                                     ")
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white.opacity(0.7))
-                                                    .font(.caption)
-                                                Text("Jan 27, 2:00 AM")
+                                                    .font(.system(size: 11))
+                                                Text(index == 0 ? "May 22, 2:00 AM             " : "May 22, 2:00 AM             ") // This should be dynamic based on actual expiration data.
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white)
-                                                    .font(.caption)
+                                                    .font(.system(size: 15))
                                             }
                                         }
                                     }
+                                    
                                     .padding()
+
+                                    // Logo Overlay (adjusted)
+                                    logoImage
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 30, height: 30) // Adjust the size as needed
+                                        .position(x: UIScreen.main.bounds.width - 60, y: 150) // Adjust the position as needed
                                 }
                                 .padding(.horizontal)
                             }
@@ -223,10 +236,9 @@ struct MyPassesView: View {
                         .tag(index)
                     }
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-
-                Spacer() // This spacer might be causing your button to disappear, remove it if needed
-
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always)) // Set to always to show the dots
+                
+                // Instructions and Buttons
                 VStack(spacing: 10) {
                     Divider()
                         .background(Color.white)
@@ -235,13 +247,13 @@ struct MyPassesView: View {
                     HStack {
                         Text("Show bartender pass to redeem.\nOnly bartender should redeem.")
                             .bold()
-                            .font(.system(size: 16))
+                            .font(.system(size: 18))
+                            .fontWeight(.bold)
                             .foregroundColor(.white)
                             .multilineTextAlignment(.leading)
                             .padding(.leading)
                         Spacer()
                     }
-                    .padding(.horizontal, 0)
 
                     Button("I am the bartender or venue staff") {
                         showingRedemptionView = true
@@ -249,16 +261,21 @@ struct MyPassesView: View {
                     .buttonStyle(BartenderButtonStyle())
 
                     Button("How to redeem this pass") {
-                        // Action for redeem button tap
+                        redemptionInstructionsView = true
                     }
                     .buttonStyle(RedeemButtonStyle())
                 }
-                .padding(.bottom, 70) // Adjust this to suit the bottom padding of your screen
+                .padding(.bottom, 70)
             }
         }
         .sheet(isPresented: $showingRedemptionView) {
             RedemptionView()
         }
+        
+        .sheet(isPresented: $redemptionInstructionsView) {
+            RedemptionInstructionsView()
+        }
+        
         .preferredColorScheme(.dark)
     }
 }
@@ -287,6 +304,48 @@ struct FeedView: View {
             .resizable()
             .scaledToFit()
             .edgesIgnoringSafeArea(.all) // If you want the image to fill the entire view
+    }
+}
+struct RedemptionInstructionsView: View {
+    @Environment(\.presentationMode) var presentationMode
+    @State private var showingVideoPlayer = false
+
+    var body: some View {
+        VStack {
+            Text("How to Redeem")
+                .font(.largeTitle)
+                .fontWeight(.bold)
+                .italic()
+                .foregroundColor(.orange)
+                .padding(.top, 40)
+                .frame(maxWidth: .infinity)
+                .background(Image("RedeemTop")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .edgesIgnoringSafeArea(.all))
+            
+            Image("How_to_Redeem")
+                .resizable()
+                .scaledToFill()
+                .frame(maxWidth: .infinity)
+                .clipped()
+            
+            Spacer().frame(height: 20) // Control the space above the Stop text
+                        
+            Spacer().frame(height: 0) // Control the space above the Redeem Pass button
+           
+            Button("Got it") {
+                presentationMode.wrappedValue.dismiss()
+            }
+            .buttonStyle(RedeemButtonStyle())
+            .padding(.horizontal)
+            
+            Spacer() // Adjust the spacer at the bottom as needed
+        }
+        .background(Image("RedeemPass")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .edgesIgnoringSafeArea(.all))
     }
 }
 
