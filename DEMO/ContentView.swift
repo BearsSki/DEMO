@@ -2,7 +2,6 @@ import SwiftUI
 import AVKit
 import Combine
 
-// Color extension
 extension Color {
     static let appBackground = Color(red: 17 / 255, green: 26 / 255, blue: 37 / 255)
 }
@@ -10,34 +9,40 @@ extension Color {
 // Main ContentView with Tab Bar
 struct ContentView: View {
     @State private var selectedTab = 1
+    @StateObject private var viewModel = AccountViewModel()
 
     var body: some View {
         ZStack {
             Color.appBackground.edgesIgnoringSafeArea(.all)
 
-            // Switching Views Based on Selected Tab
-            switch selectedTab {
-            case 0:
-                VenueView()
-            case 1:
-                MyPassesView()
-            case 2:
-                FeedView()
-            case 3:
-                AccountView()
-            default:
-                EmptyView()
-            }
-
-            // Custom Tab Bar
+            // Content based on the selected tab
             VStack {
-                Spacer()
+                Spacer() // Pushes the content to the bottom
+                switch selectedTab {
+                case 0:
+                    VenueView()
+                case 1:
+                    MyPassesView(viewModel: viewModel)
+                case 2:
+                    FeedView()
+                case 3:
+                    AccountView() // This view should now have access to the viewModel through the environment
+                default:
+                    EmptyView()
+                }
+            }
+            
+            // This should be within the outer ZStack to overlay on top of the content views.
+            VStack {
+                Spacer() // This Spacer pushes the tab bar to the bottom
                 CustomTabBar(selectedTab: $selectedTab)
             }
         }
+        .environmentObject(viewModel) // Injecting the viewModel into the environment
         .preferredColorScheme(.dark)
     }
 }
+
 
 // Custom Tab Bar
 struct CustomTabBar: View {
@@ -137,11 +142,12 @@ struct RedeemButtonStyle: ButtonStyle {
 }
 
 struct MyPassesView: View {
+    @ObservedObject var viewModel: AccountViewModel
+    
     @State private var showingRedemptionView = false
     @State private var redemptionInstructionsView = false
     @State private var selectedTab = 0
  
-
     var body: some View {
         ZStack {
             Color.appBackground.edgesIgnoringSafeArea(.all)
@@ -168,27 +174,30 @@ struct MyPassesView: View {
                                 ZStack {
                                     // Card Background
                                     let image = index == 0 ? Image("Green") : Image("Pink")
-                                    let logoImage = index == 0 ? Image("LLGreen") : Image("Pink")
+                                    let logoImage = index == 0 ? Image("LLGreen") : Image("LLPink")
+                                    //what pass
+                                    let pass = index == 0 ? (viewModel.leapPass) : (viewModel.drinkPass)
 
                                     RoundedRectangle(cornerRadius: 25, style: .continuous)
                                         .frame(height: 180)
-                                        .foregroundColor(.clear) // Makes the RoundedRectangle transparent, so the image can show through
+                                        .foregroundColor(.clear)
                                         .background(
                                             image
-                                                .resizable() // Make the image resizable
-                                                .aspectRatio(contentMode: .fill) // Fill the frame of the RoundedRectangle, may crop the image
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fill)
                                         )
-                                        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous)) // Clip the image with the same rounded rectangle shape
+                                        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
                                         .shadow(radius: 10)
 
                                     // Card Content
                                     VStack(alignment: .leading, spacing: 0) {
-                                        Text("Kollege Klub Dinkytown")
+                                        Text(viewModel.venueName)
                                             .font(.system(size: 24))
                                             .fontWeight(.bold)
                                             .foregroundColor(.white)
 
-                                        Text(index == 0 ? "Friday Pass (8am-2am) Qty: 1" : "Leap Pass                             Qty: 1")
+                                        // Replace the placeholder text below with your actual pass details
+                                        Text(pass)
                                             .font(.system(size: 23))
                                             .fontWeight(.bold)
                                             .foregroundColor(.white)
@@ -196,39 +205,45 @@ struct MyPassesView: View {
 
                                         Spacer()
 
+                                        // Replace placeholder texts with actual dynamic data
                                         HStack {
                                             VStack(alignment: .leading) {
                                                 Text("Passholder")
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white.opacity(0.7))
                                                     .font(.system(size: 11))
-                                                Text(index == 0 ? "Bodie Brice" : "Bodie Brice") // This should be dynamic based on actual passholder data.
+                                                Text(viewModel.passHolderName)
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15))
                                             }
+
                                             Spacer()
-                                            VStack(alignment: .trailing) {
-                                                Text("Expires at                                     ")
+
+                                            // Change alignment to leading for the VStack that contains "Expires at"
+                                            VStack(alignment: .leading) {
+                                                Text("Expires at")
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white.opacity(0.7))
                                                     .font(.system(size: 11))
-                                                Text(index == 0 ? "May 22, 2:00 AM             " : "May 22, 2:00 AM             ") // This should be dynamic based on actual expiration data.
+                                                Text(viewModel.expirationDate)
                                                     .fontWeight(.medium)
                                                     .foregroundColor(.white)
                                                     .font(.system(size: 15))
                                             }
                                         }
+                                        
+                                        .padding(.leading, 5)
+                                        .padding(.trailing, 30)
                                     }
-                                    
                                     .padding()
 
                                     // Logo Overlay (adjusted)
                                     logoImage
                                         .resizable()
                                         .aspectRatio(contentMode: .fit)
-                                        .frame(width: 30, height: 30) // Adjust the size as needed
-                                        .position(x: UIScreen.main.bounds.width - 60, y: 150) // Adjust the position as needed
+                                        .frame(width: 30, height: 30)
+                                        .position(x: UIScreen.main.bounds.width - 60, y: 150)
                                 }
                                 .padding(.horizontal)
                             }
@@ -236,7 +251,7 @@ struct MyPassesView: View {
                         .tag(index)
                     }
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always)) // Set to always to show the dots
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                 
                 // Instructions and Buttons
                 VStack(spacing: 10) {
@@ -271,11 +286,9 @@ struct MyPassesView: View {
         .sheet(isPresented: $showingRedemptionView) {
             RedemptionView()
         }
-        
         .sheet(isPresented: $redemptionInstructionsView) {
             RedemptionInstructionsView()
         }
-        
         .preferredColorScheme(.dark)
     }
 }
@@ -288,16 +301,88 @@ struct VenueView: View {
             .edgesIgnoringSafeArea(.all) // If you want the image to fill the entire view
     }
 }
+class AccountViewModel: ObservableObject {
+    @Published var venueName: String
+    @Published var leapPass: String
+    @Published var drinkPass: String
+    @Published var passHolderName: String
+    @Published var expirationDate: String
 
-struct AccountView: View {
-    var body: some View {
-        Image("AccountView") // Replace "AccountView" with the actual name of your image file
-            .resizable()
-            .scaledToFit()
-            .edgesIgnoringSafeArea(.all) // If you want the image to fill the entire view
+    init() {
+        // Load saved data or use default values
+        self.venueName = UserDefaults.standard.string(forKey: "venueName") ?? "Kollege Klub Dinkytown"
+        self.leapPass = UserDefaults.standard.string(forKey: "leapPass") ?? "Tuesday Pass (8pm-2am) Qty: 1"
+        self.drinkPass = UserDefaults.standard.string(forKey: "drinkPass") ?? "Drink Pass (8pm-2am) Qty: 1"
+        self.passHolderName = UserDefaults.standard.string(forKey: "passHolderName") ?? "Sean Smythe"
+        self.expirationDate = UserDefaults.standard.string(forKey: "expirationDate") ?? "April 9, 2:00 AM"
+    }
+
+    func saveChanges() {
+        UserDefaults.standard.set(venueName, forKey: "venueName")
+        UserDefaults.standard.set(leapPass, forKey: "leapPass")
+        UserDefaults.standard.set(drinkPass, forKey: "drinkPass")
+        UserDefaults.standard.set(passHolderName, forKey: "passHolderName")
+        UserDefaults.standard.set(expirationDate, forKey: "expirationDate")
     }
 }
 
+struct AccountView: View {
+    @EnvironmentObject var viewModel: AccountViewModel
+    @State private var showEditFields = false
+
+    var body: some View {
+        ZStack {
+            Image("AccountView") // Your existing content, e.g., a static image
+                .resizable()
+                .scaledToFit()
+                .edgesIgnoringSafeArea(.all)
+            
+            Color.clear
+                .contentShape(Rectangle())
+                .gesture(
+                    TapGesture(count: 2)
+                        .onEnded { _ in
+                            withAnimation {
+                                self.showEditFields.toggle()
+                            }
+                        }
+                )
+            
+            if showEditFields {
+                EditableView(viewModel: viewModel)
+                    .transition(.move(edge: .bottom))
+            }
+        }
+    }
+}
+
+struct EditableView: View {
+    @ObservedObject var viewModel: AccountViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            TextField("Venue Name", text: $viewModel.venueName)
+            TextField("leap Pass text", text: $viewModel.leapPass)
+            TextField("leap Pass text", text: $viewModel.drinkPass)
+            TextField("Pass Holder Name", text: $viewModel.passHolderName)
+            TextField("Expiration Date", text: $viewModel.expirationDate)
+
+            Button("Save Changes", action: viewModel.saveChanges)
+        }
+        .padding()
+        .textFieldStyle(RoundedBorderTextFieldStyle())
+        .background(Color(UIColor.systemBackground))
+        .cornerRadius(15)
+        .shadow(radius: 10)
+        .padding()
+    }
+}
+
+struct AccountView_Previews: PreviewProvider {
+    static var previews: some View {
+        AccountView().environmentObject(AccountViewModel())
+    }
+}
 struct FeedView: View {
     var body: some View {
         Image("FeedView") // Replace "FeedView" with the actual name of your image file
@@ -485,6 +570,3 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
-
-    
-
